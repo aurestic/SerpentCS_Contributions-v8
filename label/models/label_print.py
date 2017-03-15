@@ -41,7 +41,7 @@ class label_print(models.Model):
 
     @api.onchange('model_id')
     def onchange_model(self):
-        model_list = [] 
+        model_list = []
         if self.model_id:
             model_obj = self.env['ir.model']
             current_model=self.model_id.model
@@ -123,16 +123,15 @@ class label_print_field(models.Model):
     nolabel = fields.Boolean('No Label')
     newline = fields.Boolean('New Line',deafult=True)
 
+
 class ir_model_fields(models.Model):
 
     _inherit = 'ir.model.fields'
 
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=None):
-        data = self._context['model_list']
-        args.append(('model','in',eval(data)))
-        ret_vat = super(ir_model_fields, self).name_search(name=name,
-                                                           args=args,
-                                                           operator=operator,
-                                                           limit=limit)
-        return ret_vat
+        if "model_list" in self.env.context:
+            data = self.env.context['model_list']
+            args.append(('model', 'in', eval(data)))
+        return super(ir_model_fields, self).name_search(
+            name=name, args=args, operator=operator, limit=limit)

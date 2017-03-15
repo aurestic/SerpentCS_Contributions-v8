@@ -18,19 +18,19 @@ class label_print(models.Model):
 
     @api.onchange('model_id')
     def onchange_model(self):
-        model_list = [] 
+        model_list = []
         if self.model_id:
             model_obj = self.env['ir.model']
             current_model=self.model_id.model
             model_list.append(current_model)
-            
+
             active_model_obj = self.env[self.model_id.model]
             if active_model_obj._inherits:
                 for key, val in active_model_obj._inherits.items():
                     model_ids = model_obj.search([('model', '=', key)])
                     if model_ids:
                         model_list.append(key)
-        self.model_list = model_list                
+        self.model_list = model_list
         return model_list
 
 
@@ -41,7 +41,7 @@ class label_print(models.Model):
         for data in self.browse(self.ids):
             src_obj = data.model_id.model
             button_name = _('Label (%s)') % data.name
-            
+
             vals['ref_ir_act_report'] = action_obj.create({
                  'name': button_name,
                  'type': 'ir.actions.act_window',
@@ -52,7 +52,7 @@ class label_print(models.Model):
                  'view_mode':'form,tree',
                  'target' : 'new',
             })
-            
+
             id_temp = vals['ref_ir_act_report'].id
             vals['ref_ir_value'] = self.env['ir.values'].create({
                  'name': button_name,
@@ -66,11 +66,11 @@ class label_print(models.Model):
                     'ref_ir_value': vals.get('ref_ir_value',False).id,
                 })
         return True
-    
+
     @api.multi
     def unlink_action(self):
         ir_values_obj = self.env['ir.values']
-        
+
         act_window_obj = self.env['ir.actions.act_window']
 
         for template in self:
@@ -81,13 +81,13 @@ class label_print(models.Model):
                     ir_values_obj_search = ir_values_obj.browse(template.ref_ir_value.id)
                     ir_values_obj_search.unlink()
         return True
-    
+
 class label_print_field(models.Model):
     _name = "label.print.field"
     _rec_name = "sequence"
     _order = "sequence"
-   
-    
+
+
     sequence = fields.Integer("Sequence", required=True)
     field_id = fields.Many2one('ir.model.fields', 'Fields', required=False)
     report_id = fields.Many2one('label.print', 'Report')
@@ -99,29 +99,17 @@ class label_print_field(models.Model):
     nolabel = fields.Boolean('No Label')
     newline = fields.Boolean('New Line',deafult=True)
 
+
 class ir_model_fields(models.Model):
-    
+
     _inherit = 'ir.model.fields'
-      
+
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=None):
-        
-        data = self._context['model_list']
-        args.append(('model','in',eval(data)))
-        ret_vat = super(ir_model_fields, self).name_search(name=name, args=args, operator=operator, limit=limit)
-        return ret_vat
-     
-
-        
-        
-           
-        
-
-
-
-
-
-
-
+        if "model_list" in self.env.context:
+            data = self.env.context['model_list']
+            args.append(('model', 'in', eval(data)))
+        return super(ir_model_fields, self).name_search(
+            name=name, args=args, operator=operator, limit=limit)
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
